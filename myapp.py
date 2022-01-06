@@ -232,6 +232,15 @@ class VoiceAssistant:
             audio = self.recognizer.record(source)
         return audio
 
+    def record_and_recognize_offline(self) -> str:
+        """
+        Запись и распознавание аудио offline
+        """
+        audio = self.record_audio_mic()
+        recognized_data = self.recognize_audio_offline()
+        os.remove(assistant.AUDIO_FILE_NAME)    # удаление записанного файла
+        return recognized_data
+
     def record_and_recognize(self) -> str:
         """
         Запись и распознавание аудио
@@ -239,20 +248,20 @@ class VoiceAssistant:
         audio = self.record_audio_mic()
         recognized_data = ""
 
-        recognized_data = self.recognize_audio_offline()
-        # # использование online-распознавания через Google (высокое качество распознавания)
-        # try:
-        #     recognized_data = self.recognize_audio_online(audio)
+        # использование online-распознавания через Google (высокое качество распознавания)
+        try:
+            recognized_data = self.recognize_audio_online(audio)
 
-        # except speech_recognition.UnknownValueError:
-        #     self.say_text("Повторите фразу")
-        #     print("Повторите фразу")
+        except speech_recognition.UnknownValueError:
+            self.say_text("Повторите фразу")
+            print("Повторите фразу")
 
-        # # в случае проблем с доступом в Интернет происходит попытка использовать offline-распознавание через Vosk
-        # except speech_recognition.RequestError:
-        #     print("Переключаюсь на офлайн распознование...")
-        #     recognized_data = self.recognize_audio_offline()
+        # в случае проблем с доступом в Интернет происходит попытка использовать offline-распознавание через Vosk
+        except speech_recognition.RequestError:
+            print("Переключаюсь на офлайн распознование...")
+            recognized_data = self.recognize_audio_offline()
 
+        os.remove(assistant.AUDIO_FILE_NAME)    # удаление записанного файла
         return recognized_data
 
     # Методы для различных команд
@@ -427,9 +436,8 @@ if __name__ == "__main__":
 
     while True:
         # старт записи речи с последующим выводом распознанной речи и удалением записанного в микрофон аудио
-        voice_input = assistant.record_and_recognize()
-        os.remove(assistant.AUDIO_FILE_NAME)
-        print('Распознанный текст: ',voice_input)
+        voice_input = assistant.record_and_recognize_offline()
+        print('Распознанный текст: ', voice_input)
 
         # отделение комманд от дополнительной информации (аргументов)
         voice_input = voice_input.split(" ")
